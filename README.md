@@ -21,7 +21,17 @@ Application Android (puis iOS) de gestion de l'attention : elle bloque ou limite
 | `:service` | `ScrollGuardAccessibilityService`, `SessionTracker` (horloge monotone), `BlockOverlay` | tous |
 | `:app` | UI Jetpack Compose (phase 0 : statut du service + règles de démo) | tous |
 
-## Construire et tester
+## Récupérer l'application (sans rien installer)
+
+Chaque push sur `main` déclenche la compilation cloud ([.github/workflows/android.yml](.github/workflows/android.yml)) : tests du moteur de règles + APK de debug.
+
+1. Page GitHub du dépôt → onglet **Actions** → dernier run vert.
+2. Section **Artifacts** → télécharger **scrollguard-debug-apk** (zip contenant `app-debug.apk`).
+3. Transférer l'APK sur le téléphone Android et l'installer (autoriser les « sources inconnues »).
+
+Les artefacts expirent après 90 jours ; relancer le workflow (bouton « Run workflow ») pour en régénérer un.
+
+## Construire et tester en local (optionnel)
 
 Prérequis : Android Studio (Ladybug ou plus récent) avec JDK 17.
 

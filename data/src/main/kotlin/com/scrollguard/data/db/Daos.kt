@@ -23,6 +23,34 @@ interface RuleDao {
     suspend fun deleteForFeature(featureId: String)
 }
 
+@Dao
+interface AppSessionDao {
+    @Insert
+    suspend fun insert(session: AppSessionEntity): Long
+
+    @Query("UPDATE app_session SET endedAtEpochMs = :endedAt, durationSeconds = :durationSeconds WHERE id = :id")
+    suspend fun close(id: Long, endedAt: Long, durationSeconds: Long)
+
+    /** Sessions brutes : nécessaires pour la ventilation par tranche horaire. */
+    @Query("SELECT * FROM app_session WHERE startedAtEpochMs >= :sinceEpochMs ORDER BY startedAtEpochMs")
+    suspend fun sessionsSince(sinceEpochMs: Long): List<AppSessionEntity>
+
+    @Query("SELECT packageName, COALESCE(SUM(durationSeconds), 0) AS totalSeconds FROM app_session WHERE startedAtEpochMs >= :sinceEpochMs GROUP BY packageName ORDER BY totalSeconds DESC")
+    suspend fun totalsSince(sinceEpochMs: Long): List<AppTotal>
+
+    @Query("SELECT COUNT(*) FROM app_session WHERE startedAtEpochMs >= :sinceEpochMs")
+    suspend fun opensSince(sinceEpochMs: Long): Int
+
+    @Query("SELECT COALESCE(MAX(durationSeconds), 0) FROM app_session WHERE startedAtEpochMs >= :sinceEpochMs")
+    suspend fun longestSessionSince(sinceEpochMs: Long): Long
+
+    @Query("DELETE FROM app_session WHERE startedAtEpochMs < :beforeEpochMs")
+    suspend fun purgeOlderThan(beforeEpochMs: Long)
+}
+
+/** Agrégat « temps total par application ». */
+data class AppTotal(val packageName: String, val totalSeconds: Long)
+
 /** Agrégat « temps total par fonctionnalité » pour les écrans de stats. */
 data class FeatureTotal(val featureId: String, val totalSeconds: Long)
 

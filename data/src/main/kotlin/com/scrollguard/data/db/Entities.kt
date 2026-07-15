@@ -18,6 +18,16 @@ data class RuleEntity(
     val enabled: Boolean = true,
 )
 
+/** Session d'utilisation d'une app cible au premier plan (ouverture → sortie). */
+@Entity(tableName = "app_session")
+data class AppSessionEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val packageName: String,
+    val startedAtEpochMs: Long,
+    val endedAtEpochMs: Long? = null,
+    val durationSeconds: Long? = null,
+)
+
 /** Session d'utilisation d'une fonctionnalité (entrée → sortie). */
 @Entity(tableName = "usage_session")
 data class UsageSessionEntity(

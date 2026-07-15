@@ -41,7 +41,8 @@ fun DashboardScreen(
         serviceEnabled = isServiceEnabled()
         val startOfDay = startOfTodayEpochMs()
         topFeatures = ScrollGuardGraph.database.usageDao().totalsSince(startOfDay)
-        todayTotalSeconds = topFeatures.sumOf { it.totalSeconds }
+        todayTotalSeconds = ScrollGuardGraph.database.appSessionDao()
+            .totalsSince(startOfDay).sumOf { it.totalSeconds }
         todayBlocks = ScrollGuardGraph.database.blockEventDao().countSince(startOfDay)
     }
 
@@ -80,7 +81,7 @@ fun DashboardScreen(
             StatCard(
                 modifier = Modifier.weight(1f),
                 value = formatDuration(todayTotalSeconds),
-                label = "de distraction aujourd'hui",
+                label = "sur les réseaux aujourd'hui",
             )
             StatCard(
                 modifier = Modifier.weight(1f),

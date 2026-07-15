@@ -85,5 +85,9 @@ object FeatureCatalog {
     private val byId: Map<String, Feature> =
         apps.flatMap { it.features }.associateBy { it.id }
 
+    private val byPackage: Map<String, App> = apps.associateBy { it.packageName }
+
     fun featureName(featureId: String): String = byId[featureId]?.name ?: featureId
+
+    fun appName(packageName: String): String = byPackage[packageName]?.name ?: packageName
 }

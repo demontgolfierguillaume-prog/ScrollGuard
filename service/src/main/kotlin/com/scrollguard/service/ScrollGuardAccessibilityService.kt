@@ -45,12 +45,13 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
 
     /**
      * Les événements des apps hors cibles (lanceur inclus) sont filtrés par
-     * packageNames : si l'utilisateur quitte l'app par le geste accueil,
-     * aucun événement ne nous préviendra. Ce garde-fou vérifie donc
-     * périodiquement, tant que l'overlay est visible, que l'app cible est
-     * toujours au premier plan.
+     * packageNames : si l'utilisateur quitte l'app par le geste accueil ou
+     * éteint l'écran, aucun événement ne nous préviendra. Ce garde-fou tourne
+     * tant qu'une session d'app est ouverte : il clôt les sessions (app et
+     * fonctionnalité) et retire l'overlay dès que l'app cible n'est plus au
+     * premier plan.
      */
-    private var overlayWatchdog: Job? = null
+    private var foregroundWatchdog: Job? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -59,6 +60,7 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
         tracker = SessionTracker(
             usageDao = ScrollGuardGraph.database.usageDao(),
             blockEventDao = ScrollGuardGraph.database.blockEventDao(),
+            appSessionDao = ScrollGuardGraph.database.appSessionDao(),
         )
         overlay = BlockOverlay(this)
     }
@@ -75,6 +77,9 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
         val feature = detector.match(packageName, root)
 
         scope.launch {
+            tracker.onAppForeground(packageName)
+            ensureForegroundWatchdog()
+
             if (feature == null) {
                 tracker.onFeatureExited()
                 currentlyBlocked = null
@@ -139,19 +144,20 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
                 )
             }
         }
-        startOverlayWatchdog()
     }
 
-    private fun startOverlayWatchdog() {
-        overlayWatchdog?.cancel()
-        overlayWatchdog = scope.launch {
-            while (isActive && currentlyBlocked != null) {
-                delay(500)
+    private fun ensureForegroundWatchdog() {
+        if (foregroundWatchdog?.isActive == true) return
+        foregroundWatchdog = scope.launch {
+            while (isActive) {
+                delay(800)
                 val foreground = withContext(Dispatchers.Main) {
                     rootInActiveWindow?.packageName?.toString()
                 }
                 if (foreground == null || foreground !in detector.watchedPackages()) {
                     currentlyBlocked = null
+                    tracker.onFeatureExited()
+                    tracker.onAppExited()
                     hideOverlay()
                     break
                 }

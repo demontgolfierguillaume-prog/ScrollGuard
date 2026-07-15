@@ -94,8 +94,11 @@ private fun Phase0Screen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text("ScrollGuard — Phase 0", style = MaterialTheme.typography.headlineMedium)
-            Text("Version $versionName", style = MaterialTheme.typography.labelMedium)
+            // Version dans le titre : permet de vérifier d'un coup d'œil que le bon
+            // APK est installé (demande explicite de Guillaume après des tests
+            // faits sans le savoir sur un ancien APK).
+            Text("ScrollGuard v$versionName", style = MaterialTheme.typography.headlineMedium)
+            Text("Prototype phase 0", style = MaterialTheme.typography.labelMedium)
             Text(
                 "Prototype de validation : détection des fonctionnalités (Reels, Shorts…) " +
                     "et blocage par superposition.",

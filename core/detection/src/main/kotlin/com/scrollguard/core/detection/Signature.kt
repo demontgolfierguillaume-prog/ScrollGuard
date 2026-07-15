@@ -17,6 +17,13 @@ data class Signature(
     val matcher: MatcherType,
     val pattern: String,                     // ex. "com.instagram.android:id/clips_tab"
     val locales: List<String> = emptyList(), // pour les matchers dépendant de la langue
+    /**
+     * Si true, le nœud ne compte que s'il est `isSelected` (onglet actif).
+     * Indispensable pour les boutons d'onglets : le bouton « Reels » est présent
+     * dès l'écran d'accueil d'Instagram, mais n'est sélectionné que quand
+     * l'utilisateur est réellement dans les Reels.
+     */
+    val selectedOnly: Boolean = false,
 )
 
 @Serializable

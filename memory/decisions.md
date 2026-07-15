@@ -1,5 +1,8 @@
 # Décisions actées
 
+## 2026-07-15 — Blocage = overlay persistant, jamais d'éjection automatique
+Retour de test de Guillaume : l'action « retour » automatique fermait Instagram dès l'ouverture (vécu comme un bug, expérience brutale). Décision : en cas de blocage, on pose un écran de recouvrement qui rend la fonctionnalité inutilisable mais laisse l'app ouverte ; seul le bouton « Revenir » (choix de l'utilisateur) déclenche l'action retour. Corollaire : les signatures de boutons d'onglets doivent exiger l'état `isSelected` (champ `selectedOnly`), sinon l'onglet Reels est « détecté » dès l'écran d'accueil.
+
 ## 2026-07-15 — Android d'abord, natif
 Le blocage intra-application n'est possible que sur Android (AccessibilityService). iOS n'a aucune API équivalente : on y proposera blocage d'app entière (Screen Time) + navigateur web encadré. On lance donc Android en premier ; iOS en phase 3 avec un positionnement honnête. Kotlin/Swift natifs — pas de Flutter/React Native : le cœur (accessibilité, overlays, extensions Screen Time) est natif de toute façon, et les extensions iOS sont limitées à ~6 Mo de mémoire.
 

@@ -26,13 +26,15 @@ class FeatureDetector(initialCatalog: SignatureCatalog) {
     fun match(packageName: String, root: AccessibilityNodeInfo): FeatureId? {
         val signatures = catalog.packages[packageName] ?: return null
         for (signature in signatures) {
+            val selectedOk: (AccessibilityNodeInfo) -> Boolean =
+                { node -> !signature.selectedOnly || node.isSelected }
             val hit = when (signature.matcher) {
                 MatcherType.VIEW_ID ->
-                    root.findAccessibilityNodeInfosByViewId(signature.pattern).isNotEmpty()
+                    root.findAccessibilityNodeInfosByViewId(signature.pattern).any(selectedOk)
                 MatcherType.CONTENT_DESC ->
-                    hasDescendant(root) { it.contentDescription?.toString() == signature.pattern }
+                    hasDescendant(root) { it.contentDescription?.toString() == signature.pattern && selectedOk(it) }
                 MatcherType.TEXT ->
-                    hasDescendant(root) { it.text?.toString() == signature.pattern }
+                    hasDescendant(root) { it.text?.toString() == signature.pattern && selectedOk(it) }
             }
             if (hit) return FeatureId(signature.feature)
         }

@@ -1,18 +1,18 @@
 {
-  "version": 1,
+  "version": 2,
   "packages": {
     "com.instagram.android": [
-      { "feature": "instagram.reels", "matcher": "view_id", "pattern": "com.instagram.android:id/clips_tab" },
-      { "feature": "instagram.reels", "matcher": "content_desc", "pattern": "Reels", "locales": ["fr", "en"] },
-      { "feature": "instagram.explore", "matcher": "view_id", "pattern": "com.instagram.android:id/search_tab" }
+      { "feature": "instagram.reels", "matcher": "view_id", "pattern": "com.instagram.android:id/clips_tab", "selectedOnly": true },
+      { "feature": "instagram.reels", "matcher": "content_desc", "pattern": "Reels", "locales": ["fr", "en"], "selectedOnly": true },
+      { "feature": "instagram.explore", "matcher": "view_id", "pattern": "com.instagram.android:id/search_tab", "selectedOnly": true }
     ],
     "com.google.android.youtube": [
       { "feature": "youtube.shorts", "matcher": "view_id", "pattern": "com.google.android.youtube:id/reel_recycler" },
-      { "feature": "youtube.shorts", "matcher": "content_desc", "pattern": "Shorts", "locales": ["fr", "en"] }
+      { "feature": "youtube.shorts", "matcher": "content_desc", "pattern": "Shorts", "locales": ["fr", "en"], "selectedOnly": true }
     ],
     "com.zhiliaoapp.musically": [
-      { "feature": "tiktok.foryou", "matcher": "content_desc", "pattern": "Pour toi", "locales": ["fr"] },
-      { "feature": "tiktok.foryou", "matcher": "content_desc", "pattern": "For You", "locales": ["en"] }
+      { "feature": "tiktok.foryou", "matcher": "content_desc", "pattern": "Pour toi", "locales": ["fr"], "selectedOnly": true },
+      { "feature": "tiktok.foryou", "matcher": "content_desc", "pattern": "For You", "locales": ["en"], "selectedOnly": true }
     ]
   }
 }

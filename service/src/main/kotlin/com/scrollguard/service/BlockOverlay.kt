@@ -35,6 +35,10 @@ class BlockOverlay(private val service: AccessibilityService) {
             gravity = Gravity.CENTER
             setBackgroundColor(Color.parseColor("#F2141816"))
             setPadding(dp(32))
+            // Consomme tous les touchers : la fonctionnalité derrière l'overlay
+            // devient inutilisable, sans fermer l'application hôte.
+            isClickable = true
+            isFocusable = false
         }
 
         container.addView(TextView(service).apply {
@@ -46,7 +50,13 @@ class BlockOverlay(private val service: AccessibilityService) {
             text = "$featureLabel — $reasonLabel"
             setTextColor(Color.parseColor("#B0BDB5"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-            setPadding(0, dp(12), 0, dp(32))
+            setPadding(0, dp(12), 0, dp(8))
+        })
+        container.addView(TextView(service).apply {
+            text = service.getString(R.string.block_overlay_hint)
+            setTextColor(Color.parseColor("#7A867F"))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            setPadding(0, 0, 0, dp(32))
         })
         container.addView(Button(service).apply {
             text = service.getString(R.string.block_overlay_button_back)

@@ -35,6 +35,10 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
     private val engine = RuleEngine()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    /** Fonctionnalité actuellement recouverte par l'overlay (anti-spam d'événements). */
+    @Volatile
+    private var currentlyBlocked: FeatureId? = null
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         ScrollGuardGraph.init(applicationContext)
@@ -60,13 +64,23 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
         scope.launch {
             if (feature == null) {
                 tracker.onFeatureExited()
+                currentlyBlocked = null
                 hideOverlay()
                 return@launch
             }
+            // Déjà bloquée et recouverte : ne pas re-journaliser ni re-chronométrer.
+            if (feature == currentlyBlocked) return@launch
+
             tracker.onFeatureActive(feature)
             when (val decision = evaluate(feature)) {
-                is Decision.Allow -> hideOverlay()
-                is Decision.Warn -> hideOverlay() // TODO(phase 1) : bandeau du temps restant
+                is Decision.Allow -> {
+                    currentlyBlocked = null
+                    hideOverlay()
+                }
+                is Decision.Warn -> {
+                    currentlyBlocked = null
+                    hideOverlay() // TODO(phase 1) : bandeau du temps restant
+                }
                 is Decision.Block -> block(feature, decision)
             }
         }
@@ -83,19 +97,26 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
         return engine.evaluate(rules, context)
     }
 
+    /**
+     * Ne ferme PAS l'application : pose un écran de blocage persistant
+     * par-dessus la fonctionnalité. L'app hôte reste ouverte ; l'utilisateur
+     * quitte la zone bloquée lui-même (bouton « Revenir » ou navigation).
+     */
     private suspend fun block(feature: FeatureId, decision: Decision.Block) {
         tracker.onBlocked(feature, decision.rule.id, decision.reason.name)
+        currentlyBlocked = feature
         withContext(Dispatchers.Main) {
             if (!overlay.isShowing) {
                 overlay.show(
                     featureLabel = feature.value,
                     reasonLabel = getString(decision.reason.labelRes()),
                 ) {
-                    performGlobalAction(GLOBAL_ACTION_BACK)
+                    // Choix explicite de l'utilisateur : revenir à l'écran précédent.
+                    currentlyBlocked = null
                     overlay.hide()
+                    performGlobalAction(GLOBAL_ACTION_BACK)
                 }
             }
-            performGlobalAction(GLOBAL_ACTION_BACK)
         }
     }
 

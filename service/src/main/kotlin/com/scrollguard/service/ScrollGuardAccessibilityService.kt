@@ -11,8 +11,11 @@ import com.scrollguard.core.rules.RuleEngine
 import com.scrollguard.data.ScrollGuardGraph
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -38,6 +41,15 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
     /** Fonctionnalité actuellement recouverte par l'overlay (anti-spam d'événements). */
     @Volatile
     private var currentlyBlocked: FeatureId? = null
+
+    /**
+     * Les événements des apps hors cibles (lanceur inclus) sont filtrés par
+     * packageNames : si l'utilisateur quitte l'app par le geste accueil,
+     * aucun événement ne nous préviendra. Ce garde-fou vérifie donc
+     * périodiquement, tant que l'overlay est visible, que l'app cible est
+     * toujours au premier plan.
+     */
+    private var overlayWatchdog: Job? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -115,6 +127,24 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
                     currentlyBlocked = null
                     overlay.hide()
                     performGlobalAction(GLOBAL_ACTION_BACK)
+                }
+            }
+        }
+        startOverlayWatchdog()
+    }
+
+    private fun startOverlayWatchdog() {
+        overlayWatchdog?.cancel()
+        overlayWatchdog = scope.launch {
+            while (isActive && currentlyBlocked != null) {
+                delay(500)
+                val foreground = withContext(Dispatchers.Main) {
+                    rootInActiveWindow?.packageName?.toString()
+                }
+                if (foreground == null || foreground !in detector.watchedPackages()) {
+                    currentlyBlocked = null
+                    hideOverlay()
+                    break
                 }
             }
         }

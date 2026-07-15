@@ -18,7 +18,16 @@ interface RuleDao {
 
     @Query("DELETE FROM rule WHERE id = :id")
     suspend fun delete(id: Long)
+
+    @Query("DELETE FROM rule WHERE featureId = :featureId")
+    suspend fun deleteForFeature(featureId: String)
 }
+
+/** Agrégat « temps total par fonctionnalité » pour les écrans de stats. */
+data class FeatureTotal(val featureId: String, val totalSeconds: Long)
+
+/** Agrégat « nombre d'événements par fonctionnalité ». */
+data class FeatureCount(val featureId: String, val count: Int)
 
 @Dao
 interface UsageDao {
@@ -31,6 +40,9 @@ interface UsageDao {
     @Query("SELECT COALESCE(SUM(durationSeconds), 0) FROM usage_session WHERE featureId = :featureId AND startedAtEpochMs >= :sinceEpochMs")
     suspend fun usedSecondsSince(featureId: String, sinceEpochMs: Long): Long
 
+    @Query("SELECT featureId, COALESCE(SUM(durationSeconds), 0) AS totalSeconds FROM usage_session WHERE startedAtEpochMs >= :sinceEpochMs GROUP BY featureId ORDER BY totalSeconds DESC")
+    suspend fun totalsSince(sinceEpochMs: Long): List<FeatureTotal>
+
     @Query("DELETE FROM usage_session WHERE startedAtEpochMs < :beforeEpochMs")
     suspend fun purgeOlderThan(beforeEpochMs: Long)
 }
@@ -42,6 +54,9 @@ interface BlockEventDao {
 
     @Query("SELECT COUNT(*) FROM block_event WHERE occurredAtEpochMs >= :sinceEpochMs")
     suspend fun countSince(sinceEpochMs: Long): Int
+
+    @Query("SELECT featureId, COUNT(*) AS count FROM block_event WHERE occurredAtEpochMs >= :sinceEpochMs GROUP BY featureId ORDER BY count DESC")
+    suspend fun countsSince(sinceEpochMs: Long): List<FeatureCount>
 }
 
 @Dao

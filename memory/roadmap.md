@@ -9,8 +9,14 @@ Objectif : prouver que la détection par accessibilité est fiable et que Google
 - [ ] Déposer la demande d'entitlement Family Controls (Apple) — long délai, à faire tôt
 - Critère GO/NO-GO : ≥ 95 % de détection correcte, déclaration Play acceptée
 
-## Phase 1 — MVP Android (10 semaines)
-Onboarding permissions (S1), tableau de bord (S2), liste apps/fonctionnalités (S3), éditeur de règles (S4), bandeau d'avertissement (Warn), stats de base (S6), protection niveau 0–1 (délai 24 h, PIN), watchdog du service, agrégateur quotidien.
+## Phase 1 — MVP Android (10 semaines, entamée le 15/07/2026)
+- [x] Tableau de bord (S2), liste apps/fonctionnalités (S3, catalogue complet avec badge « Détection à venir »), éditeur de règles 4 types (S4), stats jour/semaine de base (S6) — livrés en v0.2.0
+- [x] Overlay partiel : la barre d'onglets de l'app hôte reste utilisable ; watchdog overlay (retrait si sortie de l'app par le geste accueil)
+- [x] Signature debug fixe versionnée → mises à jour d'APK sans désinstallation
+- [ ] Onboarding permissions (S1) guidé
+- [ ] Bandeau d'avertissement (Warn) avec temps restant
+- [ ] Signatures vérifiées pour les fonctionnalités « à venir » (stories, feed, DM, Facebook, X, Snapchat)
+- [ ] Protection niveau 0–1 (délai 24 h, PIN), agrégateur quotidien + purge 90 j
 
 ## Phase 2 — Android complet (6 semaines)
 Facebook, X, Snapchat ; fenêtres horaires dans l'UI ; 4 modes (Travail, Études, Concentration profonde, Temps libre) ; remote config des signatures + télémétrie de fiabilité ; mode strict (niveau 2) et partenaire (niveau 3) ; monétisation.

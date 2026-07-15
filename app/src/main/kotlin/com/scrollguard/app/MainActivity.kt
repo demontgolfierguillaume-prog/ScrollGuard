@@ -5,35 +5,25 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
+import com.scrollguard.app.ui.DashboardScreen
+import com.scrollguard.app.ui.FeaturesScreen
+import com.scrollguard.app.ui.StatsScreen
 import com.scrollguard.data.ScrollGuardGraph
-import com.scrollguard.data.db.RuleEntity
-import kotlinx.coroutines.launch
 
-/**
- * Écran unique de la phase 0 : état du service, accès aux réglages système et
- * insertion de règles de démonstration pour tester le blocage sur appareil.
- * L'onboarding et le tableau de bord complets arrivent en phase 1 (S1/S2 du
- * cahier des charges).
- */
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,13 +34,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                Phase0Screen(
+                ScrollGuardApp(
                     versionName = versionName,
                     isServiceEnabled = ::isAccessibilityServiceEnabled,
                     onOpenAccessibilitySettings = {
                         startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
                     },
-                    onInsertDemoRules = ::insertDemoRules,
                 )
             }
         }
@@ -64,84 +53,43 @@ class MainActivity : ComponentActivity() {
         return enabled.contains("$packageName/", ignoreCase = true) ||
             enabled.contains("com.scrollguard.service.ScrollGuardAccessibilityService", ignoreCase = true)
     }
-
-    private fun insertDemoRules(onDone: () -> Unit) {
-        lifecycleScope.launch {
-            val dao = ScrollGuardGraph.database.ruleDao()
-            dao.insert(RuleEntity(featureId = "instagram.reels", type = "BLOCK"))
-            dao.insert(RuleEntity(featureId = "youtube.shorts", type = "DAILY_LIMIT", dailyLimitMinutes = 15))
-            onDone()
-        }
-    }
 }
 
-@androidx.compose.runtime.Composable
-private fun Phase0Screen(
+private data class Tab(val label: String, val emoji: String)
+
+private val tabs = listOf(
+    Tab("Accueil", "🏠"),
+    Tab("Blocages", "🛡️"),
+    Tab("Stats", "📊"),
+)
+
+@Composable
+private fun ScrollGuardApp(
     versionName: String,
     isServiceEnabled: () -> Boolean,
     onOpenAccessibilitySettings: () -> Unit,
-    onInsertDemoRules: (onDone: () -> Unit) -> Unit,
 ) {
-    var serviceEnabled by remember { mutableStateOf(isServiceEnabled()) }
-    var demoRulesInserted by remember { mutableStateOf(false) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
-    Scaffold { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            // Version dans le titre : permet de vérifier d'un coup d'œil que le bon
-            // APK est installé (demande explicite de Guillaume après des tests
-            // faits sans le savoir sur un ancien APK).
-            Text("ScrollGuard v$versionName", style = MaterialTheme.typography.headlineMedium)
-            Text("Prototype phase 0", style = MaterialTheme.typography.labelMedium)
-            Text(
-                "Prototype de validation : détection des fonctionnalités (Reels, Shorts…) " +
-                    "et blocage par superposition.",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(
-                        if (serviceEnabled) "✅ Service d'accessibilité actif"
-                        else "❌ Service d'accessibilité inactif",
-                        style = MaterialTheme.typography.titleMedium,
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                tabs.forEachIndexed { index, tab ->
+                    NavigationBarItem(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        icon = { Text(tab.emoji) },
+                        label = { Text(tab.label) },
                     )
-                    Button(onClick = {
-                        onOpenAccessibilitySettings()
-                        serviceEnabled = isServiceEnabled()
-                    }) {
-                        Text("Ouvrir les réglages d'accessibilité")
-                    }
                 }
             }
-
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text("Règles de test", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "Insère deux règles de démonstration : blocage complet des Reels " +
-                            "Instagram et limite de 15 min/jour sur les Shorts YouTube.",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                    Button(
-                        enabled = !demoRulesInserted,
-                        onClick = { onInsertDemoRules { demoRulesInserted = true } },
-                    ) {
-                        Text(if (demoRulesInserted) "Règles insérées" else "Insérer les règles de démo")
-                    }
-                }
+        },
+    ) { padding ->
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+            when (selectedTab) {
+                0 -> DashboardScreen(versionName, isServiceEnabled, onOpenAccessibilitySettings)
+                1 -> FeaturesScreen()
+                else -> StatsScreen()
             }
         }
     }

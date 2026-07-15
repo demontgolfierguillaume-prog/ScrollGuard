@@ -12,8 +12,19 @@ android {
         applicationId = "com.scrollguard.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.1.3"
+        versionCode = 5
+        versionName = "0.2.0"
+    }
+
+    signingConfigs {
+        // Clé de debug versionnée : signature stable d'un build CI à l'autre,
+        // sans quoi Android exige une désinstallation à chaque mise à jour.
+        getByName("debug") {
+            storeFile = rootProject.file("keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {

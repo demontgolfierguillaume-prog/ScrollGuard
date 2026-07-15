@@ -15,6 +15,11 @@ captures/
 # Signing
 *.jks
 *.keystore
+# Exception : clé de DEBUG partagée (jamais utilisée pour distribuer).
+# Elle garantit une signature stable entre les builds CI, sinon Android
+# refuse les mises à jour de l'app. La future clé de release, elle,
+# restera hors du dépôt.
+!keystore/debug.keystore
 
 # Divers
 .DS_Store

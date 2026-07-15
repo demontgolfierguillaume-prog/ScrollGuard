@@ -40,9 +40,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         ScrollGuardGraph.init(applicationContext)
 
+        val versionName = packageManager.getPackageInfo(packageName, 0).versionName ?: "?"
+
         setContent {
             MaterialTheme {
                 Phase0Screen(
+                    versionName = versionName,
                     isServiceEnabled = ::isAccessibilityServiceEnabled,
                     onOpenAccessibilitySettings = {
                         startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
@@ -74,6 +77,7 @@ class MainActivity : ComponentActivity() {
 
 @androidx.compose.runtime.Composable
 private fun Phase0Screen(
+    versionName: String,
     isServiceEnabled: () -> Boolean,
     onOpenAccessibilitySettings: () -> Unit,
     onInsertDemoRules: (onDone: () -> Unit) -> Unit,
@@ -91,6 +95,7 @@ private fun Phase0Screen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text("ScrollGuard — Phase 0", style = MaterialTheme.typography.headlineMedium)
+            Text("Version $versionName", style = MaterialTheme.typography.labelMedium)
             Text(
                 "Prototype de validation : détection des fonctionnalités (Reels, Shorts…) " +
                     "et blocage par superposition.",

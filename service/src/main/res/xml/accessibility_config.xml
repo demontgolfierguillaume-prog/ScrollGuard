@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  packageNames limite les événements reçus aux seules apps cibles :
+  indispensable pour la batterie et exigé par notre engagement de vie privée
+  (le service ne voit jamais les autres apps).
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagReportViewIds|flagRetrieveInteractiveWindows"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/accessibility_service_description"
+    android:notificationTimeout="100"
+    android:packageNames="com.instagram.android,com.zhiliaoapp.musically,com.google.android.youtube,com.facebook.katana,com.twitter.android,com.snapchat.android" />

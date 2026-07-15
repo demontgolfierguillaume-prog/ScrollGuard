@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bouclier simple ; à remplacer par l'icône définitive du designer. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,26 L76,34 L76,52 C76,66 67,76 54,82 C41,76 32,66 32,52 L32,34 Z" />
+    <path
+        android:fillColor="#1F5C40"
+        android:pathData="M54,34 L69,39.5 L69,52 C69,62 62.5,69.5 54,74 C45.5,69.5 39,62 39,52 L39,39.5 Z" />
+</vector>

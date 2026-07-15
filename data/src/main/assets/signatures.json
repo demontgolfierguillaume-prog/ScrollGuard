@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "packages": {
+    "com.instagram.android": [
+      { "feature": "instagram.reels", "matcher": "view_id", "pattern": "com.instagram.android:id/clips_tab" },
+      { "feature": "instagram.reels", "matcher": "content_desc", "pattern": "Reels", "locales": ["fr", "en"] },
+      { "feature": "instagram.explore", "matcher": "view_id", "pattern": "com.instagram.android:id/search_tab" }
+    ],
+    "com.google.android.youtube": [
+      { "feature": "youtube.shorts", "matcher": "view_id", "pattern": "com.google.android.youtube:id/reel_recycler" },
+      { "feature": "youtube.shorts", "matcher": "content_desc", "pattern": "Shorts", "locales": ["fr", "en"] }
+    ],
+    "com.zhiliaoapp.musically": [
+      { "feature": "tiktok.foryou", "matcher": "content_desc", "pattern": "Pour toi", "locales": ["fr"] },
+      { "feature": "tiktok.foryou", "matcher": "content_desc", "pattern": "For You", "locales": ["en"] }
+    ]
+  }
+}

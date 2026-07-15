@@ -1,6 +1,7 @@
 package com.scrollguard.service
 
 import android.accessibilityservice.AccessibilityService
+import android.content.Intent
 import android.view.accessibility.AccessibilityEvent
 import com.scrollguard.core.detection.FeatureDetector
 import com.scrollguard.core.rules.BlockReason
@@ -122,12 +123,20 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
                 overlay.show(
                     featureLabel = feature.value,
                     reasonLabel = getString(decision.reason.labelRes()),
-                ) {
-                    // Choix explicite de l'utilisateur : revenir à l'écran précédent.
-                    currentlyBlocked = null
-                    overlay.hide()
-                    performGlobalAction(GLOBAL_ACTION_BACK)
-                }
+                    onLeave = {
+                        // Choix explicite : quitter la zone bloquée, rester dans l'app.
+                        currentlyBlocked = null
+                        overlay.hide()
+                        performGlobalAction(GLOBAL_ACTION_BACK)
+                    },
+                    onOpenScrollGuard = {
+                        currentlyBlocked = null
+                        overlay.hide()
+                        packageManager.getLaunchIntentForPackage(packageName)
+                            ?.apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+                            ?.let(::startActivity)
+                    },
+                )
             }
         }
         startOverlayWatchdog()

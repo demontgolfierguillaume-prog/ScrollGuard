@@ -8,8 +8,9 @@
     <string name="accessibility_service_description">ScrollGuard utilise le service d\'accessibilité pour reconnaître la fonctionnalité ouverte dans vos réseaux sociaux (par exemple les Reels ou les Shorts) et appliquer les limites que vous avez choisies. Le traitement se fait entièrement sur votre appareil : aucun contenu d\'écran, aucun message et aucune capture ne sont enregistrés ni transmis. Seuls des identifiants de fonctionnalités et des durées d\'utilisation sont conservés.</string>
 
     <string name="block_overlay_title">Reprends ta journée</string>
-    <string name="block_overlay_hint">Utilise la barre du bas pour aller ailleurs dans l\'appli.</string>
-    <string name="block_overlay_button_back">Revenir</string>
+    <string name="block_overlay_hint">La lecture est mise en pause tant que cette zone est bloquée.</string>
+    <string name="block_overlay_button_continue">Continuer sur l\'appli</string>
+    <string name="block_overlay_button_open_app">Ouvrir ScrollGuard</string>
     <string name="block_reason_always">Fonctionnalité bloquée par ta configuration</string>
     <string name="block_reason_window">En dehors des créneaux autorisés</string>
     <string name="block_reason_daily">Limite quotidienne atteinte</string>

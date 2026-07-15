@@ -8,6 +8,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -37,3 +40,14 @@ jobs:
         with:
           name: scrollguard-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      # La release « latest » offre un lien de téléchargement stable :
+      # https://github.com/demontgolfierguillaume-prog/ScrollGuard/releases/tag/latest
+      - name: Mettre à jour la release « latest »
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view latest >/dev/null 2>&1 || \
+            gh release create latest --title "Dernière version (build automatique)" \
+              --notes "APK de debug régénéré à chaque mise à jour du code." --prerelease
+          gh release upload latest app/build/outputs/apk/debug/app-debug.apk --clobber

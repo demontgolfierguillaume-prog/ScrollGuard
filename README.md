@@ -25,11 +25,12 @@ Application Android (puis iOS) de gestion de l'attention : elle bloque ou limite
 
 Chaque push sur `main` déclenche la compilation cloud ([.github/workflows/android.yml](.github/workflows/android.yml)) : tests du moteur de règles + APK de debug.
 
-1. Page GitHub du dépôt → onglet **Actions** → dernier run vert.
-2. Section **Artifacts** → télécharger **scrollguard-debug-apk** (zip contenant `app-debug.apk`).
-3. Transférer l'APK sur le téléphone Android et l'installer (autoriser les « sources inconnues »).
+**Téléchargement (lien stable, toujours la dernière version) :**
+https://github.com/demontgolfierguillaume-prog/ScrollGuard/releases/tag/latest → fichier `app-debug.apk`. Ouvrable directement depuis le navigateur du téléphone (connecté au compte GitHub, le dépôt étant privé) ; installer par-dessus la version existante.
 
-Les artefacts expirent après 90 jours ; relancer le workflow (bouton « Run workflow ») pour en régénérer un.
+**Vérification indispensable après installation :** l'écran d'accueil de ScrollGuard affiche le numéro de version — il doit correspondre au `versionName` de [app/build.gradle.kts](app/build.gradle.kts). Sinon, c'est un ancien APK qui tourne.
+
+L'APK est aussi disponible en artefact du run (onglet Actions, « scrollguard-debug-apk », expire après 90 jours).
 
 ## Construire et tester en local (optionnel)
 

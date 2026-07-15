@@ -12,7 +12,11 @@ import android.widget.TextView
 import androidx.core.view.setPadding
 
 /**
- * Écran de blocage plein écran affiché par-dessus la fonctionnalité restreinte.
+ * Écran de blocage affiché par-dessus la fonctionnalité restreinte.
+ *
+ * Il recouvre l'écran SAUF une bande en bas ([BOTTOM_GAP_DP]) : la barre
+ * d'onglets de l'app hôte reste utilisable, pour que l'utilisateur puisse
+ * rejoindre les parties non bloquées (fil, messages…) sans quitter l'app.
  *
  * Utilise TYPE_ACCESSIBILITY_OVERLAY : aucun besoin de SYSTEM_ALERT_WINDOW tant
  * que la fenêtre est posée par le service d'accessibilité. Toutes les méthodes
@@ -65,11 +69,13 @@ class BlockOverlay(private val service: AccessibilityService) {
 
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
+            // Laisse la barre d'onglets du bas accessible.
+            service.resources.displayMetrics.heightPixels - dp(BOTTOM_GAP_DP),
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT,
-        )
+        ).apply { gravity = Gravity.TOP }
 
         windowManager.addView(container, params)
         view = container
@@ -82,4 +88,9 @@ class BlockOverlay(private val service: AccessibilityService) {
 
     private fun dp(value: Int): Int =
         (value * service.resources.displayMetrics.density).toInt()
+
+    private companion object {
+        /** Hauteur laissée libre en bas (barre d'onglets de l'app hôte + navigation). */
+        const val BOTTOM_GAP_DP = 96
+    }
 }

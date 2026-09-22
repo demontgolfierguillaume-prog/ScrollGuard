@@ -143,6 +143,11 @@ class BlockOverlay(private val service: AccessibilityService) {
                 ).show()
             }
         }
+        // --- Modification ici ---
+        val originalBottom = bounds.bottom.coerceIn(top, screenHeight)
+        val extraHeight = (originalBottom - top) / 2   // la moitié de la hauteur d'origine
+        val bottom = (originalBottom + extraHeight).coerceIn(top, screenHeight)
+        // -------------------------
 
         val params = WindowManager.LayoutParams(
             right - left,

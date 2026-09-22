@@ -119,7 +119,9 @@ class BlockOverlay(private val service: AccessibilityService) {
         val left = bounds.left.coerceIn(0, screenWidth)
         val top = bounds.top.coerceIn(0, screenHeight)
         val right = bounds.right.coerceIn(left, screenWidth)
-        val bottom = bounds.bottom.coerceIn(top, screenHeight)
+        val originalBottom = bounds.bottom.coerceIn(top, screenHeight)
+        val extraHeight = (originalBottom - top) / 2
+        val bottom = (originalBottom + extraHeight).coerceIn(top, screenHeight)
         if (right <= left || bottom <= top) {
             hideBlockedShortcut()
             return
@@ -143,11 +145,6 @@ class BlockOverlay(private val service: AccessibilityService) {
                 ).show()
             }
         }
-        // --- Modification ici ---
-        val originalBottom = bounds.bottom.coerceIn(top, screenHeight)
-        val extraHeight = (originalBottom - top) / 2   // la moitié de la hauteur d'origine
-        val bottom = (originalBottom + extraHeight).coerceIn(top, screenHeight)
-        // -------------------------
 
         val params = WindowManager.LayoutParams(
             right - left,

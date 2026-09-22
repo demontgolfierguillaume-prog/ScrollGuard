@@ -9,7 +9,7 @@ Application Android (puis iOS) de gestion de l'attention : elle bloque ou limite
 1. Un **service d'accessibilité** (`:service`) reçoit les événements d'interface des seules apps cibles (filtre `packageNames`).
 2. Le **détecteur** (`:core:detection`) compare l'écran courant à un catalogue de **signatures** (identifiants de vues, descriptions) chargé depuis `assets/signatures.json` — jamais codées en dur, remplaçables par remote config en phase 2.
 3. Le **moteur de règles** (`:core:rules`, Kotlin pur, testé unitairement) décide : autoriser, avertir, ou bloquer (blocage complet, limite quotidienne/hebdomadaire, fenêtres horaires — la règle la plus restrictive gagne).
-4. En cas de blocage : le bouton Reels d'Instagram est masqué et rendu non cliquable par un petit `TYPE_ACCESSIBILITY_OVERLAY`. Un overlay plein écran sans bouton de retour reste le filet de sécurité si la fonctionnalité est ouverte par un autre chemin.
+4. En cas de blocage : le bouton Reels d'Instagram est masqué et rendu non cliquable par un petit `TYPE_ACCESSIBILITY_OVERLAY`. La détection Instagram ne déclenche jamais l'overlay plein écran afin qu'un faux positif ne bloque pas toute l'application ; les autres fonctionnalités conservent leur écran de blocage.
 
 ## Modules
 

@@ -1,7 +1,7 @@
 # Décisions actées
 
 ## 2026-09-22 — Masquage préventif du bouton Reels
-Quand la règle `instagram.reels` produit une décision de blocage, ScrollGuard localise le bouton Reels dans l'arborescence d'accessibilité, le recouvre avec un petit overlay opaque et intercepte le clic. Un message bref confirme le blocage sans fermer Instagram ni déclencher d'action retour. L'overlay plein écran reste actif comme filet de sécurité pour les accès indirects aux Reels.
+Quand la règle `instagram.reels` produit une décision de blocage, ScrollGuard localise le bouton Reels dans l'arborescence d'accessibilité, le recouvre avec un petit overlay opaque et intercepte le clic. Un message bref confirme le blocage sans fermer Instagram ni déclencher d'action retour. La détection d'un Reel actif ne déclenche jamais l'overlay plein écran : l'état `isSelected` exposé par Instagram peut produire un faux positif dès l'ouverture de l'application et bloquer toute son interface.
 
 ## 2026-09-22 — Aucun bouton de retour vers la fonctionnalité bloquée
 L'overlay de blocage ne propose plus « Continuer sur l'appli » : le seul bouton affiché ouvre ScrollGuard. Cela évite de présenter une sortie pouvant être comprise comme un accès aux Reels. L'utilisateur peut toujours quitter l'application hôte avec la navigation système.

@@ -136,6 +136,16 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
     private suspend fun block(feature: FeatureId, decision: Decision.Block) {
         tracker.onBlocked(feature, decision.rule.id, decision.reason.name)
         currentlyBlocked = feature
+
+        // La sélection exposée par Instagram n'est pas assez fiable pour
+        // justifier un écran plein : certaines versions marquent l'onglet
+        // Reels comme sélectionné dès l'ouverture de l'application. Le bouton
+        // est déjà masqué et rendu non cliquable par updateReelsShortcut().
+        if (feature == INSTAGRAM_REELS) {
+            hideOverlay()
+            return
+        }
+
         withContext(Dispatchers.Main) {
             if (!overlay.isShowing) {
                 overlay.show(

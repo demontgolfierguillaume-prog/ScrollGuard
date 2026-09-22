@@ -2,6 +2,7 @@ package com.scrollguard.service
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.graphics.Rect
 import android.view.accessibility.AccessibilityEvent
 import com.scrollguard.core.detection.FeatureDetector
 import com.scrollguard.core.rules.BlockReason
@@ -75,10 +76,21 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
 
         // Matching synchrone sur le thread du service (voir doc de classe).
         val feature = detector.match(packageName, root)
+        val reelsShortcutBounds = if (packageName == INSTAGRAM_PACKAGE) {
+            detector.findBounds(
+                packageName = packageName,
+                feature = INSTAGRAM_REELS,
+                root = root,
+                ignoreSelected = true,
+            )
+        } else {
+            null
+        }
 
         scope.launch {
             tracker.onAppForeground(packageName)
             ensureForegroundWatchdog()
+            updateReelsShortcut(packageName, reelsShortcutBounds)
 
             if (feature == null) {
                 tracker.onFeatureExited()
@@ -118,7 +130,8 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
     /**
      * Ne ferme PAS l'application : pose un écran de blocage persistant
      * par-dessus la fonctionnalité. L'app hôte reste ouverte ; l'utilisateur
-     * quitte la zone bloquée lui-même (bouton « Revenir » ou navigation).
+     * peut seulement ouvrir ScrollGuard depuis l'overlay. Il n'existe aucun
+     * bouton permettant de revenir vers la fonctionnalité bloquée.
      */
     private suspend fun block(feature: FeatureId, decision: Decision.Block) {
         tracker.onBlocked(feature, decision.rule.id, decision.reason.name)
@@ -128,15 +141,9 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
                 overlay.show(
                     featureLabel = feature.value,
                     reasonLabel = getString(decision.reason.labelRes()),
-                    onLeave = {
-                        // Choix explicite : quitter la zone bloquée, rester dans l'app.
-                        currentlyBlocked = null
-                        overlay.hide()
-                        performGlobalAction(GLOBAL_ACTION_BACK)
-                    },
                     onOpenScrollGuard = {
                         currentlyBlocked = null
-                        overlay.hide()
+                        overlay.hideAll()
                         packageManager.getLaunchIntentForPackage(packageName)
                             ?.apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
                             ?.let(::startActivity)
@@ -158,7 +165,7 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
                     currentlyBlocked = null
                     tracker.onFeatureExited()
                     tracker.onAppExited()
-                    hideOverlay()
+                    hideAllOverlays()
                     break
                 }
             }
@@ -166,6 +173,35 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
     }
 
     private suspend fun hideOverlay() = withContext(Dispatchers.Main) { overlay.hide() }
+
+    /**
+     * Quand les Reels sont interdits, recouvre leur bouton dans la barre
+     * Instagram. Le clic est consommé par l'overlay et affiche seulement un
+     * message : aucune action retour et aucune fermeture d'Instagram.
+     */
+    private suspend fun updateReelsShortcut(packageName: String, bounds: Rect?) {
+        if (packageName != INSTAGRAM_PACKAGE || bounds == null) {
+            withContext(Dispatchers.Main) { overlay.hideBlockedShortcut() }
+            return
+        }
+
+        val decision = evaluate(INSTAGRAM_REELS)
+        withContext(Dispatchers.Main) {
+            val foregroundPackage = rootInActiveWindow?.packageName?.toString()
+            if (
+                foregroundPackage == INSTAGRAM_PACKAGE &&
+                decision is Decision.Block &&
+                !overlay.isShowing
+            ) {
+                overlay.showBlockedShortcut(bounds)
+            } else {
+                overlay.hideBlockedShortcut()
+            }
+        }
+    }
+
+    private suspend fun hideAllOverlays() =
+        withContext(Dispatchers.Main) { overlay.hideAll() }
 
     private fun BlockReason.labelRes(): Int = when (this) {
         BlockReason.ALWAYS_BLOCKED -> R.string.block_reason_always
@@ -178,6 +214,12 @@ class ScrollGuardAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         scope.cancel()
+        if (::overlay.isInitialized) overlay.hideAll()
         super.onDestroy()
+    }
+
+    private companion object {
+        const val INSTAGRAM_PACKAGE = "com.instagram.android"
+        val INSTAGRAM_REELS = FeatureId("instagram.reels")
     }
 }

@@ -3,6 +3,8 @@ package com.scrollguard.service
 import android.accessibilityservice.AccessibilityService
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.Rect
+import android.graphics.drawable.GradientDrawable
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
@@ -12,6 +14,7 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.view.setPadding
 
 /**
@@ -22,8 +25,8 @@ import androidx.core.view.setPadding
  * - Prend le focus audio à l'affichage : les lecteurs vidéo (Reels, Shorts,
  *   TikTok…) mettent la lecture en pause derrière l'overlay — sans cela, le
  *   son et la vidéo continueraient.
- * - Deux sorties : « Continuer sur l'appli » (action retour, on reste dans
- *   l'app hôte) et « Ouvrir ScrollGuard ».
+ * - Une seule sortie proposée dans l'overlay : « Ouvrir ScrollGuard ».
+ *   Aucun bouton ne permet de revenir vers la fonctionnalité bloquée.
  *
  * Utilise TYPE_ACCESSIBILITY_OVERLAY : aucun besoin de SYSTEM_ALERT_WINDOW
  * tant que la fenêtre est posée par le service d'accessibilité. Toutes les
@@ -37,6 +40,7 @@ class BlockOverlay(private val service: AccessibilityService) {
         service.getSystemService(AudioManager::class.java)
 
     private var view: LinearLayout? = null
+    private var shortcutView: TextView? = null
     private var focusRequest: AudioFocusRequest? = null
 
     val isShowing: Boolean get() = view != null
@@ -44,7 +48,6 @@ class BlockOverlay(private val service: AccessibilityService) {
     fun show(
         featureLabel: String,
         reasonLabel: String,
-        onLeave: () -> Unit,
         onOpenScrollGuard: () -> Unit,
     ) {
         if (view != null) return
@@ -77,10 +80,6 @@ class BlockOverlay(private val service: AccessibilityService) {
             setPadding(0, 0, 0, dp(32))
         })
         container.addView(Button(service).apply {
-            text = service.getString(R.string.block_overlay_button_continue)
-            setOnClickListener { onLeave() }
-        })
-        container.addView(Button(service).apply {
             text = service.getString(R.string.block_overlay_button_open_app)
             setOnClickListener { onOpenScrollGuard() }
         })
@@ -103,6 +102,78 @@ class BlockOverlay(private val service: AccessibilityService) {
         view?.let { windowManager.removeView(it) }
         view = null
         releaseMediaFocus()
+    }
+
+    /**
+     * Masque un bouton de l'application hôte et intercepte ses clics sans
+     * fermer ni faire naviguer cette application.
+     */
+    fun showBlockedShortcut(bounds: Rect) {
+        if (bounds.isEmpty) {
+            hideBlockedShortcut()
+            return
+        }
+
+        val screenWidth = service.resources.displayMetrics.widthPixels
+        val screenHeight = service.resources.displayMetrics.heightPixels
+        val left = bounds.left.coerceIn(0, screenWidth)
+        val top = bounds.top.coerceIn(0, screenHeight)
+        val right = bounds.right.coerceIn(left, screenWidth)
+        val bottom = bounds.bottom.coerceIn(top, screenHeight)
+        if (right <= left || bottom <= top) {
+            hideBlockedShortcut()
+            return
+        }
+
+        val blocker = shortcutView ?: TextView(service).apply {
+            text = service.getString(R.string.blocked_shortcut_label)
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f)
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp(12).toFloat()
+                setColor(Color.parseColor("#FF141816"))
+            }
+            setOnClickListener {
+                Toast.makeText(
+                    service,
+                    R.string.blocked_shortcut_message,
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
+        }
+
+        val params = WindowManager.LayoutParams(
+            right - left,
+            bottom - top,
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT,
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            x = left
+            y = top
+        }
+
+        if (shortcutView == null) {
+            windowManager.addView(blocker, params)
+            shortcutView = blocker
+        } else {
+            windowManager.updateViewLayout(blocker, params)
+        }
+    }
+
+    fun hideBlockedShortcut() {
+        shortcutView?.let { windowManager.removeView(it) }
+        shortcutView = null
+    }
+
+    fun hideAll() {
+        hide()
+        hideBlockedShortcut()
     }
 
     /**

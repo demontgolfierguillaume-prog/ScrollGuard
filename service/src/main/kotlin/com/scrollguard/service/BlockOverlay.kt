@@ -107,6 +107,9 @@ class BlockOverlay(private val service: AccessibilityService) {
     /**
      * Masque un bouton de l'application hôte et intercepte ses clics sans
      * fermer ni faire naviguer cette application.
+     *
+     * La zone de blocage conserve la largeur d'origine mais double sa hauteur
+     * vers le bas (elle descend jusqu'à 2× la hauteur du bouton d'origine).
      */
     fun showBlockedShortcut(bounds: Rect) {
         if (bounds.isEmpty) {
@@ -119,9 +122,12 @@ class BlockOverlay(private val service: AccessibilityService) {
         val left = bounds.left.coerceIn(0, screenWidth)
         val top = bounds.top.coerceIn(0, screenHeight)
         val right = bounds.right.coerceIn(left, screenWidth)
+
+        // Hauteur d'origine du bouton, puis extension vers le bas pour la doubler.
         val originalBottom = bounds.bottom.coerceIn(top, screenHeight)
-        val extraHeight = (originalBottom - top) / 2
-        val bottom = (originalBottom + extraHeight).coerceIn(top, screenHeight)
+        val originalHeight = originalBottom - top
+        val bottom = (originalBottom + originalHeight).coerceIn(top, screenHeight)
+
         if (right <= left || bottom <= top) {
             hideBlockedShortcut()
             return

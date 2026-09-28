@@ -52,7 +52,21 @@ class FeatureDetector(initialCatalog: SignatureCatalog) {
         for (signature in signatures) {
             if (signature.feature != feature.value) continue
             val node = findNode(root, signature, ignoreSelected) ?: continue
-            return Rect().also(node::getBoundsInScreen).takeUnless { it.isEmpty }
+            val targetBounds = Rect().also(node::getBoundsInScreen)
+            if (targetBounds.isEmpty) continue
+
+            // Une signature Instagram peut viser l'ImageView du logo au lieu
+            // de la cellule tactile complète. Remonter jusqu'au parent
+            // cliquable afin que l'overlay couvre bien toute la cible du tap.
+            var ancestor = node
+            for (depth in 0 until MAX_INTERACTIVE_ANCESTORS) {
+                ancestor = ancestor.parent ?: break
+                val ancestorBounds = Rect().also(ancestor::getBoundsInScreen)
+                if (ancestorBounds.contains(targetBounds) && ancestor.isClickable) {
+                    return ancestorBounds
+                }
+            }
+            return targetBounds
         }
         return null
     }
@@ -94,5 +108,6 @@ class FeatureDetector(initialCatalog: SignatureCatalog) {
         // Borne la traversée : les arborescences des réseaux sociaux sont profondes
         // et le service reçoit des dizaines d'événements par seconde.
         const val MAX_DEPTH = 12
+        const val MAX_INTERACTIVE_ANCESTORS = 6
     }
 }
